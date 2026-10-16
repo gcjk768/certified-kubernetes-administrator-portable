@@ -42,8 +42,9 @@ def add_mcq(domain, question, opts, answer, explanation, source):
                  "correct": answer, "explanation": f"{explanation.strip()}\n(source: {source})"})
 
 sys.path.insert(0, HERE)          # python -I drops the script dir from sys.path
-import online_parsers
+import online_parsers, online_parsers2
 online_parsers.parse_all(os.path.join(HERE, "sources", "online"), add_mcq)
+online_parsers2.parse_all(os.path.join(HERE, "sources", "online"), add_mcq)   # second research batch, 11 more sources
 
 # 2. Extra task banks: sources/tasks/*.md, "## <title>" then task text then a fenced solution block
 for f in sorted(glob.glob(os.path.join(HERE, "sources", "tasks", "*.md"))):

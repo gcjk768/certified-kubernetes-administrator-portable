@@ -91,7 +91,7 @@ def p_techpractice(ON, add):
 def p_ziyadali(ON, add):
     src = "ZiyadAli00/training-ops quiz bank (GitHub, no licence, AI-generated)"
     t = open(os.path.join(ON, "gh_ziyadali00_training_ops_cka_quiz_bank.md"), encoding="utf-8").read()
-    for m in re.finditer(r"^## Q\d+ \[([A-Z]+)\][^\n]*\n(.+?)\n((?:- [a-f]\) .*\n)+)Answer:\s*([a-f](?:\s*,\s*[a-f])*)\.\s*(.*?)(?=\n## Q|\Z)",
+    for m in re.finditer(r"^## Q\d+ \[([A-Z]+)\][^\n]*\n([^\n]+)\n((?:- [a-f]\) [^\n]*\n)+)Answer:\s*([a-f](?:\s*,\s*[a-f])*)\.\s*(.*?)(?=\n## Q|\Z)",
                          t, re.M | re.S):
         dom, stem, optblock, ans, expl = m.groups()
         opts = {L.upper(): _md(x) for L, x in re.findall(r"^- ([a-f])\) (.*)$", optblock, re.M)}
@@ -102,7 +102,7 @@ def p_ziyadali(ON, add):
 def p_yassine(ON, add):
     src = "yassine-eluharani/QuizzApp (GitHub)"
     for q in json.load(open(os.path.join(ON, "gh_yassine_quizzapp_cka_ckad_quiz1.json"), encoding="utf-8")):
-        stem = re.sub(r"^Note:.*?(\[SCENARIO\]\s*|\.\s+)", "", q["question"], count=1, flags=re.S) if q["question"].startswith("Note:") else q["question"]
+        stem = re.sub(r"^Note:.*?\[SCENARIO\]\s*", "", q["question"], count=1, flags=re.S)   # drop the "Note: real exam is hands-on" boilerplate
         opts = {LET[i]: _md(c) for i, c in enumerate(q["choices"])}
         ans = ",".join(LET[i] for i in sorted(q["correct_answer_indices"]))
         _emit(add, guess_domain(stem), _md(stem), opts, ans, _ht(q.get("explanation_html", "")), src)
