@@ -114,8 +114,9 @@ for md in sorted(ROOT.rglob("*.md")):
 #    one note per page: title = first heading, bullets = the page text, labels = its code blocks
 NOTES_DIR = Path(__file__).resolve().parent / "sources" / "notes"
 for md in sorted(NOTES_DIR.glob("*.md")) if NOTES_DIR.exists() else []:
-    txt = read(md)
-    title = (re.search(r"^#\s*(.+)$", txt, re.M) or [None, md.stem.replace("_", " ")])[1].strip()
+    txt = re.sub(r"\A---\n.*?\n---\n", "", read(md), count=1, flags=re.S)      # drop the YAML header the collector added
+    tm = re.search(r"^Title:\s*(.+)$", txt, re.M) or re.search(r"^#\s*(.+)$", txt, re.M)
+    title = (tm.group(1) if tm else md.stem.replace("_", " ")).strip()
     title = re.sub(r"\s*[|·].*$", "", title)[:120]
     key = re.sub(r"\W+", " ", title.lower()).strip()
     if key in seen_titles or len(txt) < 400:

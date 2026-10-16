@@ -23,7 +23,7 @@ def add(domain, task, solution, source):
 # 1. Scenarios from the course folder (notes with solution commands)
 if os.path.exists(NOTES):
     for n in csv.DictReader(open(NOTES, encoding="utf-8")):
-        if not n["labels"].strip():
+        if not n["labels"].strip() or n["pages"].startswith("notes/"):   # docs/concept pages are study cards, not tasks
             continue
         task = re.sub(r"(?i)^(cka:?|cka question:?)\s*", "", n["title"]).strip() + "\n\n" + n["bullets"]
         task = re.sub(r"\n(Solution|Answer)\b.*", "", task, flags=re.S)       # keep the solution out of the task text
