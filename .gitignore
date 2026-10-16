@@ -1,0 +1,18 @@
+bot.env
+data/
+sources/
+CKA_practice_questions_2026.csv
+docs/vault/
+temp/
+__pycache__/
+.playwright-mcp/
+.env
+vault/
+*.pdf
+*.docx
+
+*.zip
+sources/online/
+
+# course material (private)
+sources/
