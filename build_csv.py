@@ -31,6 +31,20 @@ if os.path.exists(NOTES):
 else:
     print("no study_notes.csv: run build_notes.py first")
 
+# 1b. Multiple-choice rows (sources/online/*, generated MCQs): options filled, so the portal serves them in MCQ mode
+def add_mcq(domain, question, opts, answer, explanation, source):
+    key = re.sub(r"\W+", " ", question[:120].lower()).strip()
+    if key in seen or len(question) < 20 or not answer:
+        return
+    seen.add(key)
+    rows.append({"id": f"CKA-{len(rows) + 1:04d}", "domain": domain, "question": question.strip(),
+                 "options": "\n".join(f"{L}. {opts[L]}" for L in "ABCDEFGH" if opts.get(L)),
+                 "correct": answer, "explanation": f"{explanation.strip()}\n(source: {source})"})
+
+sys.path.insert(0, HERE)          # python -I drops the script dir from sys.path
+import online_parsers
+online_parsers.parse_all(os.path.join(HERE, "sources", "online"), add_mcq)
+
 # 2. Extra task banks: sources/tasks/*.md, "## <title>" then task text then a fenced solution block
 for f in sorted(glob.glob(os.path.join(HERE, "sources", "tasks", "*.md"))):
     t = open(f, encoding="utf-8").read()
@@ -43,4 +57,4 @@ with open(OUT, "w", newline="", encoding="utf-8") as fh:
     w.writeheader(); w.writerows(rows)
 from collections import Counter
 print(Counter(r["domain"] for r in rows))
-print("tasks:", len(rows), "->", OUT)
+print("tasks:", sum(1 for r in rows if not r["options"]), "mcq:", sum(1 for r in rows if r["options"]), "->", OUT)

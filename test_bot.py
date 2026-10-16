@@ -5,8 +5,11 @@ os.environ["DATA_DIR"] = os.environ.get("DATA_DIR", "data")
 import bot
 
 assert len(bot.QUESTIONS) >= 100
-assert all(not q["letters"] for q in bot.QUESTIONS.values())            # tasks, no options
-assert all(q["explanation"].startswith("Reference solution") for q in bot.QUESTIONS.values())
+tasks = [q for q in bot.QUESTIONS.values() if not q["letters"]]
+mcqs = [q for q in bot.QUESTIONS.values() if q["letters"]]
+assert len(tasks) >= 100 and len(mcqs) >= 50, (len(tasks), len(mcqs))   # both phases present
+assert all(q["explanation"].startswith("Reference solution") for q in tasks)
+assert all(q["answer"] <= set(q["letters"]) for q in mcqs)
 assert all(len(bot.question_text(q)) < 4096 for q in bot.QUESTIONS.values())
 assert {q["domain"] for q in bot.QUESTIONS.values()} <= {"Troubleshooting", "Cluster Architecture, Installation & Configuration",
                                                           "Services & Networking", "Workloads & Scheduling", "Storage"}
