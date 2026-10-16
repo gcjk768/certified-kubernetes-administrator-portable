@@ -31,3 +31,9 @@ m = bot.metrics(big, now)
 assert m["score"] == 1000 and bot.verdict(m).startswith("🟢") and bot.PASS == 660
 assert bot.NOTES and all(n["labels"] or n["bullets"] for n in bot.NOTES.values())
 print("ok: cka bank", len(bot.QUESTIONS), "tasks,", len(bot.NOTES), "notes")
+
+# invented icon classes are swapped for the closest real one under the same name (no ImportError at render time)
+fixed = bot.fix_icon_imports("from diagrams.aws.network import VPC, VPNGateway as GW, GwlbEndpoint\nfrom diagrams import Diagram")
+assert fixed.startswith("from diagrams.aws.network import VPC, ") and " as GW" in fixed and " as GwlbEndpoint" in fixed, fixed
+exec(fixed)
+print("ok icon imports")
