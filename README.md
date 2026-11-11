@@ -4,6 +4,10 @@ A self-hosted study bot for the **CKA** exam, built for someone who is still lea
 
 > Unofficial and independent. Not affiliated with the Linux Foundation or CNCF. The tasks are practice scenarios from open-source Killercoda repositories, not exam content.
 
+## Architecture
+
+![Architecture of the CKA study bot](docs/architecture.svg)
+
 ## The exam (checked 2026-10-16)
 
 About 15 to 20 performance-based tasks on live clusters, 120 minutes, pass 66%, USD 445, two attempts, two killer.sh simulator sessions included. Domains: Troubleshooting 30%, Cluster Architecture, Installation and Configuration 25%, Services and Networking 20%, Workloads and Scheduling 15%, Storage 10%.
