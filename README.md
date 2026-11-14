@@ -4,10 +4,6 @@ A self-hosted study bot for the **CKA** exam, built for someone who is still lea
 
 > Unofficial and independent. Not affiliated with the Linux Foundation or CNCF. The tasks are practice scenarios from open-source Killercoda repositories, not exam content.
 
-## Architecture
-
-![Architecture of the CKA study bot](docs/architecture.svg)
-
 ## The exam (checked 2026-10-16)
 
 About 15 to 20 performance-based tasks on live clusters, 120 minutes, pass 66%, USD 445, two attempts, two killer.sh simulator sessions included. Domains: Troubleshooting 30%, Cluster Architecture, Installation and Configuration 25%, Services and Networking 20%, Workloads and Scheduling 15%, Storage 10%.
@@ -26,15 +22,18 @@ About 15 to 20 performance-based tasks on live clusters, 120 minutes, pass 66%, 
 
 ```sh
 python build_notes.py "<course folder>/Killercoda"   # scenarios -> data/study_notes.csv (also sources/notes/*.md concept pages)
-python -I build_csv.py                               # notes with solutions -> data/questions.csv
+python build_mcq.py                                  # optional: one MCQ per task, written by Claude (sources/mcq/generated.jsonl)
+python build_mcq.py --verify                         # blind solver re-answers each generated MCQ; disagreements -> sources/mcq/review.md
+python -I build_csv.py                               # notes with solutions -> data/questions.csv (verified generated MCQs only)
 python test_bot.py
+python test_build_mcq.py                             # blind-solver logic with a fake claude
 ```
 
 Nothing from the course folder is committed (`sources/`, `data/`, `*.pdf` are gitignored).
 
 ## Files
 
-`bot.py` the bot · `build_notes.py` scenarios and docs pages to notes · `build_csv.py` notes to tasks · `test_bot.py` self-check · `Dockerfile`, `compose.yaml`, `run.ps1`, `bot.env.example`.
+`bot.py` the bot · `build_notes.py` scenarios and docs pages to notes · `build_csv.py` notes to tasks · `build_mcq.py` MCQ generator and blind-solver check · `test_bot.py`, `test_build_mcq.py` self-checks · `Dockerfile`, `compose.yaml`, `run.ps1`, `bot.env.example`.
 
 ## License
 

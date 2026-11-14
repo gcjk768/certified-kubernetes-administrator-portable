@@ -105,9 +105,13 @@ def parse_all(ON, add_mcq):
                 add_mcq(guess_domain(q.get("category", "") + " " + q["question"]), q["question"], opts, ans,
                         q.get("explanation", "") + (" Exam tip: " + q["examTip"] if q.get("examTip") else ""), "open-exam-prep.com CKA practice")
 
-    # MCQs generated from the hands-on tasks (build_mcq.py): one JSON object per line
+    # MCQs generated from the hands-on tasks (build_mcq.py): one JSON object per line. Once the blind solver has run
+    # (python build_mcq.py --verify) only the questions it agreed with go in; the rest stay in generated.jsonl and are
+    # listed in sources/mcq/review.md.
+    import build_mcq
     f = os.path.join(os.path.dirname(ON), "mcq", "generated.jsonl")
     if os.path.exists(f):
+        ok = build_mcq.verified_keys(); held = 0
         for line in open(f, encoding="utf-8"):
             try:
                 q = json.loads(line)
@@ -115,5 +119,9 @@ def parse_all(ON, add_mcq):
                 continue
             opts = {L: q["options"].get(L, "") for L in "ABCD" if q.get("options", {}).get(L)}
             if len(opts) >= 3 and q.get("correct") and q.get("question"):
+                if ok is not None and (len(opts) < 4 or build_mcq.qkey(q) not in ok):
+                    held += 1; continue
                 add_mcq(q.get("domain", "Workloads & Scheduling"), q["question"], opts, q["correct"], q.get("explanation", ""),
                         "MCQ written by Claude from a hands-on scenario")
+        print("generated MCQs: NOT VERIFIED YET, all included (run: python build_mcq.py --verify)" if ok is None else
+              f"generated MCQs: {held} held back as flagged, unverified or not checked yet (sources/mcq/review.md)")
