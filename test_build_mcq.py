@@ -67,3 +67,27 @@ calls.clear(); write([edited] + [mcq(n) for n in names[1:]]); b.verify()
 assert sorted(calls) == ["agree", "malformed", "malformed"], calls
 assert b.verified_keys() == {b.qkey(mcq("agree")), b.qkey(edited), b.qkey(mcq("retry"))}
 print("ok edited question is re-checked")
+
+# --recheck: a second, stronger solver looks at the flagged questions only; agreeing with the key clears the flag
+import sys
+
+
+def stronger(system, schema, prompt, need="options"):
+    name = re.search(r"Stem (\w+)\?", prompt).group(1); calls.append(name)
+    letter = lambda orig: re.search(rf"^([A-D])\. {name} option {orig}$", prompt, re.M).group(1)
+    if name == "disagree":
+        return {"answer": letter("B"), "ambiguous": False, "reason": "B is right after all"}, 0.02
+    return {"answer": letter("B"), "ambiguous": True, "reason": "still two answers"}, 0.02
+
+
+b.claude = stronger
+flagged_before = sorted(r["key"] for r in map(json.loads, b.VERIFIED.read_text(encoding="utf-8").splitlines()) if r["status"] == "flagged")
+calls.clear(); sys.argv.append("--recheck"); b.verify(); sys.argv.remove("--recheck")
+last = {}
+for r in map(json.loads, b.VERIFIED.read_text(encoding="utf-8").splitlines()):
+    last[r["key"]] = r
+assert sorted(set(calls)) == sorted(set(flagged_before)) and "agree" not in calls, calls       # only the flagged ones are asked
+assert last["disagree"]["status"] == "verified" and last["disagree"]["checked_by"] == b.MODEL
+assert last["ambiguous"]["status"] == "flagged" and last["ambiguous"]["first_reason"] == "B and D both work"
+assert "First solver's reason: B and D both work" in b.REVIEW.read_text(encoding="utf-8")
+print("ok recheck clears a flag the stronger solver disagrees with, keeps the rest")

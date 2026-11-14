@@ -132,7 +132,11 @@ def verify():
                 r = json.loads(line); status[r["qkey"]] = r
             except Exception:
                 pass
-    todo = [q for k, q in qs.items() if status.get(k, {}).get("status") not in ("verified", "flagged")]
+    # --recheck: a second opinion on the flagged ones only, normally from a stronger model
+    # (python build_mcq.py --verify --recheck --model sonnet). Agreement with the key clears the flag.
+    recheck = "--recheck" in sys.argv
+    todo = [q for k, q in qs.items() if (status.get(k, {}).get("status") == "flagged" if recheck else
+                                         status.get(k, {}).get("status") not in ("verified", "flagged"))]
     print(f"{len(qs)} MCQs, {len(qs) - len(todo)} already checked, {len(todo[:LIMIT])} to solve blind with {MODEL} x{WORKERS}")
     todo = todo[:LIMIT]
     lock = threading.Lock(); cost = [0.0]; n = [0]
@@ -140,6 +144,11 @@ def verify():
     def worker(chunk):
         for q in chunk:
             rec, c = solve(q)
+            if recheck:
+                rec["checked_by"] = MODEL
+                rec["first_reason"] = status[rec["qkey"]].get("reason", "")
+                if rec["status"] == "unverified":            # the second solver gave nothing usable: the flag stands
+                    rec = {**status[rec["qkey"]], "recheck_failed": MODEL}
             with lock:
                 with VERIFIED.open("a", encoding="utf-8") as f:
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -158,7 +167,8 @@ def verify():
     for q, r in held:
         why = "unverified" if r["status"] == "unverified" else "flagged: ambiguous" if r.get("ambiguous") else "flagged: solver disagrees"
         md += [f"## {r['key']} · {why}", "", f"qkey `{r['qkey']}` · generator key **{r['generator']}** · solver answer **{r['solver'] or '-'}**", "",
-               q["question"], "", *[f"- {L}. {q['options'][L]}" for L in "ABCD"], "", f"Solver's reason: {r['reason']}", ""]
+               q["question"], "", *[f"- {L}. {q['options'][L]}" for L in "ABCD"], "", f"Solver's reason{' (' + r['checked_by'] + ')' if r.get('checked_by') else ''}: {r['reason']}",
+               *([f"First solver's reason: {r['first_reason']}"] if r.get("first_reason") else []), ""]
     REVIEW.write_text("\n".join(md), encoding="utf-8")
     count = lambda s: sum(1 for k in qs if status.get(k, {}).get("status") == s)
     print(f"done: {n[0]} solved, total ${cost[0]:.2f}, verified {count('verified')}, flagged {count('flagged')}, "
