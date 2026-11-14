@@ -136,7 +136,7 @@ def verify():
     # (python build_mcq.py --verify --recheck --model sonnet). Agreement with the key clears the flag.
     recheck = "--recheck" in sys.argv
     todo = [q for k, q in qs.items() if (status.get(k, {}).get("status") == "flagged" if recheck else
-                                         status.get(k, {}).get("status") not in ("verified", "flagged"))]
+                                         status.get(k, {}).get("status") not in ("verified", "flagged", "dropped"))]
     print(f"{len(qs)} MCQs, {len(qs) - len(todo)} already checked, {len(todo[:LIMIT])} to solve blind with {MODEL} x{WORKERS}")
     todo = todo[:LIMIT]
     lock = threading.Lock(); cost = [0.0]; n = [0]
@@ -162,7 +162,7 @@ def verify():
           "Written by `python build_mcq.py --verify`, rewritten on every run. Every question below is still in `generated.jsonl`"
           " (nothing is deleted); `build_csv.py` leaves it out of the bank until it is verified.", "",
           "- **Fix:** edit its line in `generated.jsonl` (search for the key), then run `--verify` again: an edited question is checked again.",
-          "- **Drop:** leave it as it is, or delete its line.",
+          "- **Drop:** leave it as it is, or add a line to `verified.jsonl` with its qkey and `\"status\": \"dropped\"` to take it off this list.",
           '- **Keep as it is:** set `"status": "verified"` on its line in `verified.jsonl` (search for the qkey).', ""]
     for q, r in held:
         why = "unverified" if r["status"] == "unverified" else "flagged: ambiguous" if r.get("ambiguous") else "flagged: solver disagrees"
